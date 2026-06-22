@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* 1. Body Base Style - Mobile First, Premium styling */
+  body {
+    @apply bg-brand-gray-light text-brand-gray-dark font-sans min-h-screen antialiased selection:bg-brand-blue selection:text-brand-white;
+  }
+
+  /* Heading Resets */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold text-brand-gray-dark tracking-tight;
+  }
+
+  h1 {
+    @apply text-2xl md:text-3xl mb-4;
+  }
+
+
+  /* 2. Inputs Base Style - Clean, modern, focus rings, accessible text sizes */
+  input, select, textarea {
+    @apply w-full px-4 py-2.5 bg-brand-white border border-slate-200 rounded-lg text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all duration-200 text-sm shadow-sm;
+  }
+
+  input[type="checkbox"], input[type="radio"] {
+    @apply w-4 h-4 rounded text-brand-blue focus:ring-brand-blue border-slate-300;
+  }
+
+  /* 3. Tables Base Style - Premium spacing, headers, alternating background values */
+  table {
+    @apply min-w-full divide-y divide-slate-100 bg-brand-white rounded-xl overflow-hidden shadow-premium;
+  }
+
+  thead {
+    @apply bg-slate-50/75 backdrop-blur-sm border-b border-slate-100;
+  }
+
+  th {
+    @apply px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+  }
+
+  tbody {
+    @apply divide-y divide-slate-100 bg-brand-white;
+  }
+
+  tr {
+    @apply hover:bg-slate-50/50 transition-colors duration-150;
+  }
+
+  td {
+    @apply px-6 py-4 text-sm text-slate-600 whitespace-nowrap align-middle;
+  }
+}
+
+@layer components {
+  /* 4. Buttons (Botones) - Professional financial button states */
+  .btn-primary {
+    @apply px-4 py-2.5 bg-brand-blue hover:bg-brand-blue/90 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm hover:shadow-md hover:shadow-brand-blue/10 transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 font-semibold rounded-lg transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-success {
+    @apply px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+  }
+
+  /* 5. Card Component (Cards) - Rounded panels with soft shadows */
+  .financial-card {
+    @apply bg-brand-white border border-slate-100 rounded-2xl p-6 shadow-premium hover:shadow-lg transition-all duration-300;
+  }
+  
+  .financial-card-header {
+    @apply flex items-center justify-between border-b border-slate-50 pb-4 mb-4;
+  }
+}
