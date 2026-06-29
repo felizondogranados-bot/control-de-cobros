@@ -6,6 +6,7 @@ import Layout from '../components/layout/Layout';
 
 // Pages
 import Dashboard from '../pages/Dashboard';
+import Categorias from '../pages/Categorias';
 import Clientes from '../pages/Clientes';
 import Deudas from '../pages/Deudas';
 import Pagos from '../pages/Pagos';
@@ -32,10 +33,11 @@ function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
 
-      {/* Private Routes (Dashboard, Clients, Debts, Payments) */}
+      {/* Private Routes (Dashboard, Categories, Clients, Debts, Payments) */}
       <Route element={<PrivateRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/categorias" element={<Categorias />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/deudas" element={<Deudas />} />
           <Route path="/pagos" element={<Pagos />} />

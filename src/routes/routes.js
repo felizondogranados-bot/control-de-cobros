@@ -8,6 +8,7 @@ export const ROUTES = {
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   DASHBOARD: '/dashboard',
+  CATEGORIAS: '/categorias',
   CLIENTES: '/clientes',
   DEUDAS: '/deudas',
   PAGOS: '/pagos',
@@ -33,6 +34,11 @@ export const privateRoutes = [
     path: ROUTES.DASHBOARD,
     label: 'Dashboard',
     icon: 'dashboard',
+  },
+  {
+    path: ROUTES.CATEGORIAS,
+    label: 'Categorías',
+    icon: 'folder',
   },
   {
     path: ROUTES.CLIENTES,

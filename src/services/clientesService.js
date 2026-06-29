@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { createMovimiento } from './movimientosService';
+import { getCategorias as fetchCategorias } from './categoriasService';
 
 /**
  * Clientes Service
@@ -196,18 +197,5 @@ export async function deleteCliente(id, userId) {
  * @param {string} userId - Auth user ID.
  */
 export async function getCategorias(userId) {
-  if (!userId) throw new Error('Usuario no autenticado.');
-
-  const { data, error } = await supabase
-    .from('categorias')
-    .select('*')
-    .or(`user_id.is.null,user_id.eq.${userId}`)
-    .order('nombre', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching categories:', error);
-    throw error;
-  }
-
-  return data;
+  return fetchCategorias(userId);
 }

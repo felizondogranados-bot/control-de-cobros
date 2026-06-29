@@ -4,9 +4,9 @@ import {
   getClientes, 
   createCliente, 
   updateCliente, 
-  deleteCliente, 
-  getCategorias 
+  deleteCliente
 } from '../services/clientesService';
+import { useCategorias } from '../contexts/CategoriasContext';
 import ClienteForm from '../components/ui/ClienteForm';
 
 /**
@@ -18,10 +18,10 @@ import ClienteForm from '../components/ui/ClienteForm';
  */
 function Clientes() {
   const { user } = useAuth();
+  const { categorias, loading: loadingCategorias } = useCategorias();
 
   // Data states
   const [clientes, setClientes] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filter/Search states
@@ -36,7 +36,7 @@ function Clientes() {
   // Alert banners
   const [alert, setAlert] = useState(null); // { type: 'success' | 'error', message: '' }
 
-  // Load clients and categories
+  // Load clients
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
@@ -44,9 +44,6 @@ function Clientes() {
     try {
       const fetchedClientes = await getClientes(user.id);
       setClientes(fetchedClientes);
-
-      const fetchedCategorias = await getCategorias(user.id);
-      setCategorias(fetchedCategorias);
     } catch (err) {
       console.error('Error loading page data:', err);
       setAlert({
@@ -132,14 +129,21 @@ function Clientes() {
     setDeletingCliente(cliente);
   };
 
+  // Helper to retrieve category details from cache
+  const getClienteCategoriaInfo = (categoriaId) => {
+    if (!categoriaId) return null;
+    return categorias.find((c) => c.id === categoriaId);
+  };
+
   // Filter clients locally for real-time reactivity
   const filteredClientes = clientes.filter(cliente => {
     const fullName = `${cliente.nombre} ${cliente.apellido || ''}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
                           cliente.telefono.includes(searchQuery);
     
+    // Category ID is a UUID string, match directly without Number() conversion
     const matchesCategory = selectedCategory === '' || 
-                            cliente.categoria_id === Number(selectedCategory);
+                            cliente.categoria_id === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -231,58 +235,78 @@ function Clientes() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredClientes.map((cliente) => (
-                  <tr key={cliente.id}>
-                    <td className="font-semibold text-brand-gray-dark">
-                      {cliente.nombre}
-                    </td>
-                    <td>
-                      {cliente.apellido || <span className="text-slate-300">-</span>}
-                    </td>
-                    <td className="font-mono text-xs">
-                      {cliente.telefono}
-                    </td>
-                    <td>
-                      {cliente.categoria_id ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-blue/5 text-brand-blue">
-                          {cliente.categoria_nombre}
+                {filteredClientes.map((cliente) => {
+                  const catInfo = getClienteCategoriaInfo(cliente.categoria_id);
+                  const badgeStyle = catInfo?.color
+                    ? {
+                        backgroundColor: `${catInfo.color}15`,
+                        color: catInfo.color,
+                        borderColor: `${catInfo.color}30`,
+                        borderWidth: '1px'
+                      }
+                    : {
+                        backgroundColor: '#64748b15',
+                        color: '#64748b',
+                        borderColor: '#64748b30',
+                        borderWidth: '1px'
+                      };
+
+                  return (
+                    <tr key={cliente.id}>
+                      <td className="font-semibold text-brand-gray-dark">
+                        {cliente.nombre}
+                      </td>
+                      <td>
+                        {cliente.apellido || <span className="text-slate-300">-</span>}
+                      </td>
+                      <td className="font-mono text-xs">
+                        {cliente.telefono}
+                      </td>
+                      <td>
+                        {cliente.categoria_id && catInfo ? (
+                          <span 
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                            style={badgeStyle}
+                          >
+                            {catInfo.nombre}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs font-medium">
+                            Sin categoría
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-center font-mono text-slate-400 text-xs">
+                        -
+                      </td>
+                      <td>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
+                          cliente.estado_cliente === 'activo'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {cliente.estado_cliente}
                         </span>
-                      ) : (
-                        <span className="text-slate-400 text-xs font-medium">
-                          Sin categoría
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-center font-mono text-slate-400 text-xs">
-                      -
-                    </td>
-                    <td>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
-                        cliente.estado_cliente === 'activo'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {cliente.estado_cliente}
-                      </span>
-                    </td>
-                    <td className="text-right whitespace-nowrap text-sm font-medium">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleEditClick(cliente)}
-                          className="px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue/5 rounded transition-all"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(cliente)}
-                          className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded transition-all"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="text-right whitespace-nowrap text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleEditClick(cliente)}
+                            className="px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue/5 rounded transition-all"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(cliente)}
+                            className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded transition-all"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -293,7 +317,6 @@ function Clientes() {
       {showFormModal && (
         <ClienteForm
           initialData={editingCliente}
-          categorias={categorias}
           onSubmit={handleFormSubmit}
           onClose={() => {
             setShowFormModal(false);

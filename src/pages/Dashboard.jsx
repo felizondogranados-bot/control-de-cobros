@@ -4,7 +4,7 @@ import { getDashboardStats } from '../services/dashboardService';
 import { getDiasAtraso } from '../utils/debtStatusHelpers';
 import { sendDebtReminder } from '../services/whatsapp';
 import InstallPWAButton from '../components/ui/InstallPWAButton';
-
+import { useCategorias } from '../contexts/CategoriasContext';
 
 /**
  * Dashboard Component
@@ -14,6 +14,7 @@ import InstallPWAButton from '../components/ui/InstallPWAButton';
  */
 function Dashboard() {
   const { user } = useAuth();
+  const { categorias } = useCategorias();
 
   // Data states
   const [stats, setStats] = useState(null);
@@ -199,7 +200,7 @@ function Dashboard() {
       </div>
 
       {/* Volúmenes de Cartera (Fila 2) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5">
         {/* Clientes */}
         <div className="bg-brand-white border border-slate-100 rounded-2xl p-5 shadow-premium hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>
@@ -324,6 +325,29 @@ function Dashboard() {
           <span className="text-[10px] text-slate-400 font-semibold block mt-3">
             Bitácora de auditoría
           </span>
+        </div>
+
+        {/* Categorías */}
+        <div className="bg-brand-white border border-slate-100 rounded-2xl p-5 shadow-premium hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+          <div className="flex justify-between items-start">
+            <div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Categorías
+              </span>
+              <span className="text-2xl font-black text-brand-gray-dark block tracking-tight">
+                {categorias.length}
+              </span>
+            </div>
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-lg font-bold">
+              📂
+            </div>
+          </div>
+          <div className="text-[9px] sm:text-[10px] text-slate-400 font-bold block mt-3 whitespace-nowrap">
+            <span>⚙️ {categorias.filter(c => c.user_id === null).length} Sis.</span>
+            <span className="mx-1">|</span>
+            <span>👤 {categorias.filter(c => c.user_id !== null).length} Pers.</span>
+          </div>
         </div>
       </div>
 

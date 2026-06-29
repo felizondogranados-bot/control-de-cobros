@@ -29,6 +29,7 @@ function Layout() {
   const getTitle = () => {
     switch (pathname) {
       case '/': return 'Dashboard';
+      case '/categorias': return 'Gestión de Categorías';
       case '/clientes': return 'Gestión de Clientes';
       case '/deudas': return 'Control de Deudas';
       case '/pagos': return 'Historial de Pagos';

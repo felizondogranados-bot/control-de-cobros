@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useCategorias } from '../../contexts/CategoriasContext';
 
 /**
  * ClienteForm Component
  * 
  * - Renders a form for adding or editing a client.
  * - Enforces mandatory fields (Nombre, Teléfono, Categoría) and prints errors.
- * - Receives available categories from Supabase as a list.
+ * - Resolves categories dynamically from the global CategoriasContext.
  */
-function ClienteForm({ initialData, categorias, onSubmit, onClose }) {
+function ClienteForm({ initialData, onSubmit, onClose }) {
+  const { categorias } = useCategorias();
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -135,11 +137,13 @@ function ClienteForm({ initialData, categorias, onSubmit, onClose }) {
               <option value="">
                 {categorias.length === 0 ? 'Sin categorías disponibles' : 'Selecciona una categoría (Opcional)...'}
               </option>
-              {categorias.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nombre}
-                </option>
-              ))}
+              {categorias
+                .filter((cat) => cat.estado === 'activa' || (initialData && initialData.categoria_id === cat.id))
+                .map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nombre} {cat.estado === 'inactiva' ? ' (Inactiva)' : ''}
+                  </option>
+                ))}
             </select>
             {categorias.length === 0 && (
               <p className="text-xs text-slate-400 mt-1">

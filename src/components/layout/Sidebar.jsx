@@ -11,6 +11,7 @@ import { NavLink } from 'react-router-dom';
 function Sidebar({ isAuthenticated, onLogout }) {
   const privateTabs = [
     { path: '/', label: '📊 Dashboard', end: true },
+    { path: '/categorias', label: '📂 Categorías', end: false },
     { path: '/clientes', label: '👥 Clientes', end: false },
     { path: '/deudas', label: '💸 Deudas', end: false },
     { path: '/pagos', label: '💳 Pagos', end: false },
