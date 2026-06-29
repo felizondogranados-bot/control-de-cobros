@@ -9,29 +9,36 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons.svg', 'logo.png'],
       manifest: {
         name: 'Control de Cobros',
         short_name: 'Cobros',
-        description: 'Aplicación para el control y seguimiento de cobros y deudas',
-        theme_color: '#2563eb',
-        background_color: '#ffffff',
+        description: 'Sistema de administración y control de cobros',
+        theme_color: '#929433',
+        background_color: '#EEE7DD',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'apple-touch-icon.png',
             sizes: '180x180',
+            type: 'image/png'
+          },
+          {
+            src: 'logo.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ]
