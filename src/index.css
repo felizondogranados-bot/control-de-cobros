@@ -3,80 +3,108 @@
 @tailwind utilities;
 
 @layer base {
-  /* 1. Body Base Style - Mobile First, Premium styling */
+  /* 1. Body Base Style - Warm, elegant Linen palette, Plus Jakarta Sans headers */
   body {
-    @apply bg-brand-gray-light text-brand-gray-dark font-sans min-h-screen antialiased selection:bg-brand-blue selection:text-brand-white;
+    @apply bg-linen-light text-brand-gray-dark font-sans min-h-screen antialiased selection:bg-moss/20 selection:text-moss-dark;
   }
 
   /* Heading Resets */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-bold text-brand-gray-dark tracking-tight;
+    @apply font-title font-bold text-brand-gray-dark tracking-tight;
   }
 
   h1 {
-    @apply text-2xl md:text-3xl mb-4;
+    @apply text-3xl md:text-4xl mb-6;
   }
 
-
-  /* 2. Inputs Base Style - Clean, modern, focus rings, accessible text sizes */
+  /* 2. Inputs Base Style - Generous spacing, large touch areas, smooth animations */
   input, select, textarea {
-    @apply w-full px-4 py-2.5 bg-brand-white border border-slate-200 rounded-lg text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all duration-200 text-sm shadow-sm;
+    @apply w-full px-4 py-3 bg-brand-white border border-linen-dark rounded-xl text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 text-base shadow-sm;
   }
 
   input[type="checkbox"], input[type="radio"] {
-    @apply w-4 h-4 rounded text-brand-blue focus:ring-brand-blue border-slate-300;
+    @apply w-5 h-5 rounded border-linen-dark text-moss focus:ring-moss;
   }
 
-  /* 3. Tables Base Style - Premium spacing, headers, alternating background values */
+  /* 3. Tables Base Style - High row height, generous padding, fixed headers */
   table {
-    @apply min-w-full divide-y divide-slate-100 bg-brand-white rounded-xl overflow-hidden shadow-premium;
+    @apply min-w-full divide-y divide-linen/50 bg-brand-white rounded-2xl overflow-hidden shadow-soft;
   }
 
   thead {
-    @apply bg-slate-50/75 backdrop-blur-sm border-b border-slate-100;
+    @apply bg-linen-light border-b border-linen-dark;
   }
 
   th {
-    @apply px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+    @apply px-6 py-4 text-left text-xs font-bold text-moss-dark uppercase tracking-wider select-none;
   }
 
   tbody {
-    @apply divide-y divide-slate-100 bg-brand-white;
+    @apply divide-y divide-linen/30 bg-brand-white;
   }
 
   tr {
-    @apply hover:bg-slate-50/50 transition-colors duration-150;
+    @apply hover:bg-linen-light/30 transition-colors duration-150;
   }
 
   td {
-    @apply px-6 py-4 text-sm text-slate-600 whitespace-nowrap align-middle;
+    @apply px-6 py-5 text-base text-slate-700 whitespace-nowrap align-middle;
   }
 }
 
 @layer components {
-  /* 4. Buttons (Botones) - Professional financial button states */
+  /* 4. Buttons (Botones) - Accessible minimum height (44px), clear hierarchy */
   .btn-primary {
-    @apply px-4 py-2.5 bg-brand-blue hover:bg-brand-blue/90 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm hover:shadow-md hover:shadow-brand-blue/10 transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+    @apply px-6 py-3 bg-moss hover:bg-moss-hover active:scale-[0.98] text-white font-semibold rounded-xl shadow-sm hover:shadow-md hover:shadow-moss/10 transition-all duration-200 text-base inline-flex items-center justify-center gap-2 cursor-pointer;
   }
 
   .btn-secondary {
-    @apply px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 font-semibold rounded-lg transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+    @apply px-6 py-3 bg-linen hover:bg-linen-dark/50 active:scale-[0.98] text-moss-dark font-semibold rounded-xl transition-all duration-200 text-base inline-flex items-center justify-center gap-2 cursor-pointer border border-linen-dark/20;
   }
 
   .btn-danger {
-    @apply px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+    @apply px-6 py-3 bg-rose-light hover:bg-rose/25 active:scale-[0.98] text-rose-dark font-semibold rounded-xl border border-rose/30 transition-all duration-200 text-base inline-flex items-center justify-center gap-2 cursor-pointer;
   }
 
   .btn-success {
-    @apply px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-brand-white font-semibold rounded-lg shadow-sm transition-all duration-200 text-sm inline-flex items-center justify-center gap-2;
+    @apply px-6 py-3 bg-matcha-light hover:bg-matcha/20 active:scale-[0.98] text-moss-dark font-semibold rounded-xl border border-matcha/40 transition-all duration-200 text-base inline-flex items-center justify-center gap-2 cursor-pointer;
   }
 
-  /* 5. Card Component (Cards) - Rounded panels with soft shadows */
+  /* 5. Card Component (Cards) - Elegant rounded cards with subtle shadows */
   .financial-card {
-    @apply bg-brand-white border border-slate-100 rounded-2xl p-6 shadow-premium hover:shadow-lg transition-all duration-300;
+    @apply bg-brand-white border border-linen rounded-2xl p-6 shadow-soft hover:shadow-premium transition-all duration-300;
   }
   
   .financial-card-header {
-    @apply flex items-center justify-between border-b border-slate-50 pb-4 mb-4;
+    @apply flex items-center justify-between border-b border-linen/50 pb-4 mb-4;
+  }
+}
+
+/* Custom smooth transition classes */
+.fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

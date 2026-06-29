@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+import Alert from '../components/ui/Alert';
+import Card from '../components/ui/Card';
 
 /**
  * Login Page
  * 
- * - Render an email/password form styled with Tailwind.
+ * - Render an email/password form styled with custom UI components.
  * - Authenticates against Supabase and handles redirect and errors.
  */
 function Login() {
@@ -34,71 +38,81 @@ function Login() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <div className="w-full max-w-md bg-brand-white border border-slate-200 rounded-2xl p-8 shadow-premium">
-        <h2 className="text-2xl font-bold text-brand-gray-dark text-center mb-6">
-          Iniciar Sesión
-        </h2>
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8">
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-moss flex items-center justify-center text-white font-bold text-2xl shadow-md mb-3 select-none">
+            $
+          </div>
+          <h2 className="text-3xl font-title font-bold text-brand-gray-dark text-center">
+            Bienvenido de nuevo
+          </h2>
+          <p className="text-slate-500 text-base mt-1 text-center">
+            Ingresa tus datos para acceder al sistema
+          </p>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium">
-            ⚠️ {error}
+          <div className="mb-6">
+            <Alert type="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              required
-              placeholder="ejemplo@cobros.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input
+            id="email"
+            label="Correo Electrónico"
+            type="email"
+            required
+            placeholder="correo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+          />
 
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Contraseña
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-600 tracking-wide">
+                Contraseña <span className="text-rose-dark">*</span>
               </label>
               <Link 
                 to="/forgot-password"
-                className="text-xs text-brand-blue hover:underline font-medium"
+                className="text-sm text-moss-dark hover:underline font-semibold"
               >
                 ¿Olvidaste tu clave?
               </Link>
             </div>
             <input
+              id="password"
               type="password"
               required
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={submitting}
+              className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm"
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={submitting}
-            className="w-full btn-primary mt-2"
+            variant="primary"
+            className="w-full mt-2"
           >
             {submitting ? 'Iniciando sesión...' : 'Ingresar'}
-          </button>
+          </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-500">
+        <div className="mt-8 text-center text-base text-slate-500 border-t border-linen/50 pt-6">
           ¿No tienes una cuenta?{' '}
-          <Link to="/register" className="text-brand-blue hover:underline font-semibold">
+          <Link to="/register" className="text-moss-dark hover:underline font-bold">
             Regístrate aquí
           </Link>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -5,27 +5,28 @@ import React from 'react';
  * 
  * Scalability Design:
  * - Styled using Tailwind CSS classes.
- * - Adheres to the financial design system colors and typography.
+ * - Adheres to the new warm financial design system colors and typography.
+ * - Minimum tactile click size of 44px for accessibility.
  */
 function Button({ children, onClick, type = 'button', variant = 'primary', disabled = false, ...props }) {
   const getClassName = () => {
-    const base = 'px-4 py-2.5 font-semibold rounded-lg text-sm inline-flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]';
+    const base = 'px-6 py-3 font-semibold rounded-xl text-base inline-flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] cursor-pointer min-h-[44px]';
     
     if (disabled) {
-      return `${base} bg-slate-100 text-slate-400 cursor-not-allowed opacity-60`;
+      return `${base} bg-linen text-slate-400 cursor-not-allowed opacity-50 border border-linen-dark/20`;
     }
     
     switch (variant) {
       case 'primary':
-        return `${base} bg-brand-blue hover:bg-brand-blue/90 text-brand-white shadow-sm hover:shadow-md hover:shadow-brand-blue/10`;
+        return `${base} bg-moss hover:bg-moss-hover text-white shadow-sm hover:shadow-md hover:shadow-moss/10`;
       case 'secondary':
-        return `${base} bg-slate-100 hover:bg-slate-200 text-slate-700`;
+        return `${base} bg-linen hover:bg-linen-dark/50 text-moss-dark border border-linen-dark/20`;
       case 'danger':
-        return `${base} bg-rose-600 hover:bg-rose-700 text-brand-white shadow-sm`;
+        return `${base} bg-rose-light hover:bg-rose/25 text-rose-dark border border-rose/30`;
       case 'success':
-        return `${base} bg-emerald-600 hover:bg-emerald-700 text-brand-white shadow-sm`;
+        return `${base} bg-matcha-light hover:bg-matcha/20 text-moss-dark border border-matcha/40`;
       default:
-        return `${base} bg-brand-blue hover:bg-brand-blue/90 text-brand-white shadow-sm`;
+        return `${base} bg-moss hover:bg-moss-hover text-white shadow-sm`;
     }
   };
 

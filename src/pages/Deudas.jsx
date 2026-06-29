@@ -12,6 +12,26 @@ import { getPagosByDeuda } from '../services/pagosService';
 import { sendDebtReminder } from '../services/whatsapp';
 import DeudaForm from '../components/ui/DeudaForm';
 import { getDebtStatus } from '../utils/debtStatusHelpers';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Badge from '../components/ui/Badge';
+import Alert from '../components/ui/Alert';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingState from '../components/ui/LoadingState';
+import Modal from '../components/ui/Modal';
+import { 
+  Search, 
+  Plus, 
+  MessageSquare, 
+  FileText, 
+  Settings, 
+  Edit2, 
+  Trash2, 
+  DollarSign,
+  Calendar,
+  History
+} from 'lucide-react';
 
 /**
  * Deudas Page
@@ -88,7 +108,6 @@ function Deudas() {
         // Edit mode
         const updated = await updateDeuda(editingDeuda.id, formData, user.id);
         
-        // Find corresponding client locally for immediate mapping update
         const clientObj = clientes.find(c => c.id === formData.cliente_id);
         const mappedUpdated = {
           ...updated,
@@ -102,7 +121,6 @@ function Deudas() {
         // Create mode
         const newDebt = await createDeuda(formData, user.id);
         
-        // Map local state properties
         const clientObj = clientes.find(c => c.id === formData.cliente_id);
         const mappedNew = {
           ...newDebt,
@@ -117,7 +135,7 @@ function Deudas() {
       setEditingDeuda(null);
     } catch (err) {
       console.error('Error saving debt:', err);
-      throw err; // Form modal catches and renders error banner
+      throw err;
     }
   };
 
@@ -127,7 +145,6 @@ function Deudas() {
     try {
       await deleteDeuda(cancelingDeuda.id, user.id);
       
-      // Update local state state to 'cancelada'
       setDeudas(prev => prev.map(d => 
         d.id === cancelingDeuda.id ? { ...d, estado: 'cancelada' } : d
       ));
@@ -177,7 +194,6 @@ function Deudas() {
     setStatusError(null);
     const pending = Number(updatingEstadoDeuda.saldo_pendiente);
 
-    // 1. Reactivar validation: if saldo_pendiente === 0, block and show error
     if (nuevoEstado === 'activa') {
       if (pending === 0) {
         setStatusError('La deuda no puede reactivarse porque no tiene saldo pendiente.');
@@ -185,7 +201,6 @@ function Deudas() {
       }
     }
 
-    // 2. Marcar como pagada validation: if saldo_pendiente > 0, block and show error
     if (nuevoEstado === 'pagada') {
       if (pending > 0) {
         setStatusError('La deuda no puede marcarse como pagada porque aún tiene saldo pendiente.');
@@ -193,7 +208,6 @@ function Deudas() {
       }
     }
 
-    // 3. Cancelar validation (modal de confirmación)
     if (nuevoEstado === 'cancelada') {
       const confirmText = `¿Desea cancelar esta deuda?\n\nLa deuda permanecerá registrada para efectos históricos, pero dejará de considerarse en los cálculos financieros.`;
       if (!window.confirm(confirmText)) {
@@ -204,7 +218,6 @@ function Deudas() {
     try {
       await updateDeudaEstado(updatingEstadoDeuda.id, nuevoEstado, user.id);
       
-      // Update local state
       setDeudas(prev => prev.map(d => 
         d.id === updatingEstadoDeuda.id ? { ...d, estado: nuevoEstado } : d
       ));
@@ -226,7 +239,6 @@ function Deudas() {
 
     const statusVirtual = getDebtStatus(deuda);
 
-    // Map selected status tabs
     let matchesStatus = false;
     if (selectedStatus === 'activas') {
       matchesStatus = statusVirtual === 'activa';
@@ -244,23 +256,19 @@ function Deudas() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 fade-in-up">
       {/* Alert Banner */}
       {alert && (
-        <div className={`p-4 rounded-xl border-l-4 font-medium text-sm animate-fade-in ${
-          alert.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-600 text-emerald-800' 
-            : 'bg-rose-50 border-rose-600 text-rose-800'
-        }`}>
-          {alert.type === 'success' ? '✅' : '⚠️'} {alert.message}
-        </div>
+        <Alert type={alert.type} onClose={() => setAlert(null)}>
+          {alert.message}
+        </Alert>
       )}
 
       {/* Filter and Action Header */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-brand-white border border-slate-200 p-5 rounded-2xl shadow-premium">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 bg-white border border-linen p-6 rounded-3xl shadow-soft">
         
         {/* Status Tab buttons */}
-        <div className="flex bg-slate-100 p-1 rounded-xl shrink-0 self-start">
+        <div className="flex bg-linen-light p-1 rounded-2xl shrink-0 self-start border border-linen/50">
           {[
             { id: 'activas', label: 'Activas' },
             { id: 'pagadas', label: 'Pagadas' },
@@ -271,9 +279,9 @@ function Deudas() {
             <button
               key={tab.id}
               onClick={() => setSelectedStatus(tab.id)}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${
                 selectedStatus === tab.id
-                  ? 'bg-brand-white text-brand-gray-dark shadow-sm'
+                  ? 'bg-white text-moss-dark shadow-sm'
                   : 'text-slate-500 hover:text-brand-gray-dark'
               }`}
             >
@@ -282,159 +290,168 @@ function Deudas() {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl w-full">
-          {/* Search bar */}
-          <input
+        <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-xl w-full">
+          <Input
+            id="search"
+            label="Buscar por Cliente o Detalle"
             type="text"
-            placeholder="Buscar por cliente o descripción..."
+            placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
           />
         </div>
 
         {/* Create action */}
-        <button
+        <Button
           onClick={() => {
             setEditingDeuda(null);
             setShowFormModal(true);
           }}
-          className="btn-primary shrink-0 self-start xl:self-auto"
+          variant="primary"
+          className="shrink-0 w-full xl:w-auto"
         >
-          ➕ Nueva Deuda
-        </button>
+          <Plus className="w-5 h-5" />
+          <span>Nueva Deuda</span>
+        </Button>
       </div>
 
       {/* Main List Workspace */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px]">
-          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-slate-500 text-sm mt-4 font-semibold">Cargando deudas de Supabase...</span>
-        </div>
+        <Card className="flex flex-col items-center justify-center min-h-[300px]">
+          <LoadingState message="Cargando deudas..." />
+        </Card>
       ) : filteredDeudas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px] text-center">
-          <div className="text-slate-300 text-5xl mb-4 select-none">💸</div>
-          <h4 className="font-bold text-lg text-brand-gray-dark">No se encontraron deudas</h4>
-          <p className="text-sm text-slate-400 mt-1 max-w-sm">
-            {deudas.length === 0 
-              ? 'No hay registros de deudas. Agrega una nueva presionando "+ Nueva Deuda".' 
-              : 'Prueba a cambiar de pestaña o ajustar los términos de búsqueda.'}
-          </p>
-        </div>
+        <EmptyState
+          title="No se encontraron deudas"
+          description={
+            deudas.length === 0 
+              ? 'No hay registros de deudas. Agrega una nueva presionando "Nueva Deuda".' 
+              : 'Prueba a cambiar de pestaña o ajustar los términos de búsqueda.'
+          }
+          icon={<DollarSign className="w-8 h-8 text-moss" />}
+          actionText={deudas.length === 0 ? "Nueva Deuda" : null}
+          onAction={deudas.length === 0 ? () => {
+            setEditingDeuda(null);
+            setShowFormModal(true);
+          } : null}
+        />
       ) : (
-        <div className="overflow-hidden border border-slate-200 rounded-2xl bg-brand-white shadow-premium">
+        <Card className="p-0 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
+            <table className="min-w-full">
               <thead>
                 <tr>
-                  <th>Cliente</th>
-                  <th>Descripción</th>
-                  <th>Monto Total</th>
-                  <th>Saldo Pendiente</th>
-                  <th>Frecuencia</th>
-                  <th>Día Cobro</th>
-                  <th>Próxima Fecha</th>
-                  <th>Estado</th>
-                  <th className="text-right">Acciones</th>
+                  <th className="px-6 py-4">Cliente</th>
+                  <th className="px-6 py-4">Detalle</th>
+                  <th className="px-6 py-4">Total</th>
+                  <th className="px-6 py-4">Pendiente</th>
+                  <th className="px-6 py-4">Frecuencia</th>
+                  <th className="px-6 py-4">Día de Cobro</th>
+                  <th className="px-6 py-4">Próximo Pago</th>
+                  <th className="px-6 py-4">Estado</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredDeudas.map((deuda) => (
-                  <tr key={deuda.id}>
-                    <td className="font-semibold text-brand-gray-dark">
-                      {deuda.cliente_nombre}
-                    </td>
-                    <td>
-                      <div>
-                        <div className="text-brand-gray-dark font-medium">{deuda.descripcion}</div>
-                        {deuda.observaciones && (
-                          <div className="text-xs text-slate-400 italic mt-0.5 max-w-xs truncate" title={deuda.observaciones}>
-                            {deuda.observaciones}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="font-mono text-sm font-semibold">
-                      ${deuda.monto_total.toLocaleString()}
-                    </td>
-                    <td className="font-mono text-sm text-brand-blue font-bold">
-                      ${deuda.saldo_pendiente.toLocaleString()}
-                    </td>
-                    <td>
-                      <span className="capitalize text-xs font-semibold text-slate-500">
-                        {deuda.frecuencia}
-                      </span>
-                    </td>
-                    <td className="text-xs">
-                      {deuda.dia_cobro}
-                    </td>
-                    <td className="font-mono text-xs font-semibold text-slate-600">
-                      {deuda.proxima_fecha_pago}
-                    </td>
-                    <td>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                        getDebtStatus(deuda) === 'activa'
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : getDebtStatus(deuda) === 'pagada'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : getDebtStatus(deuda) === 'vencida'
-                          ? 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
-                          : 'bg-slate-100 text-slate-500 border border-slate-200'
-                      }`}>
-                        {getDebtStatus(deuda)}
-                      </span>
-                    </td>
-                    <td className="text-right whitespace-nowrap text-sm font-medium">
-                      <div className="flex justify-end gap-1 sm:gap-2">
-                        {/* WhatsApp reminder shortcut */}
-                        {(getDebtStatus(deuda) === 'activa' || getDebtStatus(deuda) === 'vencida') && (
+              <tbody>
+                {filteredDeudas.map((deuda) => {
+                  const status = getDebtStatus(deuda);
+                  return (
+                    <tr key={deuda.id} className="hover:bg-linen-light/30 transition-colors">
+                      <td className="px-6 py-5 font-semibold text-brand-gray-dark text-base">
+                        {deuda.cliente_nombre}
+                      </td>
+                      <td className="px-6 py-5">
+                        <div>
+                          <div className="text-brand-gray-dark font-semibold text-base">{deuda.descripcion}</div>
+                          {deuda.observaciones && (
+                            <div className="text-sm text-slate-400 italic mt-0.5 max-w-xs truncate" title={deuda.observaciones}>
+                              {deuda.observaciones}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 font-mono text-base font-semibold text-slate-600">
+                        ${deuda.monto_total.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-5 font-mono text-base text-moss-dark font-bold">
+                        ${deuda.saldo_pendiente.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="capitalize text-sm font-semibold text-slate-500">
+                          {deuda.frecuencia}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-sm text-slate-600">
+                        {deuda.dia_cobro}
+                      </td>
+                      <td className="px-6 py-5 font-mono text-sm font-semibold text-slate-600">
+                        {deuda.proxima_fecha_pago || <span className="text-slate-300">-</span>}
+                      </td>
+                      <td className="px-6 py-5">
+                        <Badge variant={
+                          status === 'activa' ? 'info' :
+                          status === 'pagada' ? 'success' :
+                          status === 'vencida' ? 'danger' : 'info'
+                        }>
+                          {status === 'activa' ? 'Al día' :
+                           status === 'pagada' ? 'Pagada' :
+                           status === 'vencida' ? 'Vencida' : 'Cancelada'}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-5 text-right whitespace-nowrap">
+                        <div className="flex justify-end gap-1.5">
+                          {/* WhatsApp reminder shortcut */}
+                          {(status === 'activa' || status === 'vencida') && (
+                            <button
+                              onClick={() => handleSendReminder(deuda)}
+                              className="p-2 text-emerald-800 bg-matcha-light hover:bg-matcha rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-matcha/40"
+                              title="Enviar recordatorio por WhatsApp"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleSendReminder(deuda)}
-                             className="px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 rounded transition-all inline-flex items-center gap-1"
-                            title="Enviar Recordatorio por WhatsApp"
+                            onClick={() => handleViewHistory(deuda)}
+                            className="p-2 text-slate-600 hover:bg-linen-light rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-linen-dark/20"
+                            title="Ver abonos"
                           >
-                            💬 <span className="hidden sm:inline">Recordar</span>
+                            <History className="w-4 h-4" />
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleViewHistory(deuda)}
-                          className="px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded transition-all"
-                          title="Ver Historial de Abonos"
-                        >
-                          📄 <span className="hidden sm:inline">Pagos</span>
-                        </button>
-                        <button
-                          onClick={() => setUpdatingEstadoDeuda(deuda)}
-                          className="px-2 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-50 rounded transition-all inline-flex items-center gap-1"
-                          title="Cambiar Estado Administrativo"
-                        >
-                          ⚙️ <span className="hidden sm:inline">Estado</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingDeuda(deuda);
-                            setShowFormModal(true);
-                          }}
-                          className="px-2 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue/5 rounded transition-all"
-                        >
-                          Editar
-                        </button>
-                        {(getDebtStatus(deuda) === 'activa' || getDebtStatus(deuda) === 'vencida') && (
                           <button
-                            onClick={() => setCancelingDeuda(deuda)}
-                            className="px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded transition-all"
+                            onClick={() => setUpdatingEstadoDeuda(deuda)}
+                            className="p-2 text-amber-800 hover:bg-amber-50 rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-amber-200"
+                            title="Cambiar estado"
                           >
-                            Cancelar
+                            <Settings className="w-4 h-4" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() => {
+                              setEditingDeuda(deuda);
+                              setShowFormModal(true);
+                            }}
+                            className="p-2 text-moss-dark hover:bg-moss/10 rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-moss/20"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          {(status === 'activa' || status === 'vencida') && (
+                            <button
+                              onClick={() => setCancelingDeuda(deuda)}
+                              className="p-2 text-rose-dark hover:bg-rose-light rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-rose/30"
+                              title="Cancelar deuda"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Add/Edit Modal */}
@@ -451,231 +468,206 @@ function Deudas() {
       )}
 
       {/* Logical Delete Confirmation */}
-      {cancelingDeuda && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-brand-gray-dark mb-2">
-              Cancelar Deuda
-            </h3>
-            <p className="text-sm text-slate-500 mb-6">
-              ¿Estás seguro de que deseas cancelar la deuda por <strong className="text-brand-gray-dark">${cancelingDeuda.monto_total.toLocaleString()}</strong> de{' '}
-              <strong className="text-brand-gray-dark">{cancelingDeuda.cliente_nombre}</strong>?
-              <br />
-              <span className="text-xs text-rose-600 mt-2 block font-medium">
-                Esta acción es una baja lógica; la deuda se marcará como "cancelada" y no será eliminada físicamente.
-              </span>
-            </p>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setCancelingDeuda(null)}
-                className="btn-secondary"
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCancel}
-                className="btn-danger"
-              >
-                Sí, Cancelar Deuda
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={!!cancelingDeuda}
+        onClose={() => setCancelingDeuda(null)}
+        title="Cancelar Deuda"
+      >
+        <p className="text-base text-slate-500 mb-6">
+          ¿Estás seguro de que deseas cancelar la deuda por <strong className="text-brand-gray-dark">${cancelingDeuda?.monto_total.toLocaleString()}</strong> de{' '}
+          <strong className="text-brand-gray-dark">{cancelingDeuda?.cliente_nombre}</strong>?
+          <br />
+          <span className="text-sm text-rose-dark mt-3 block font-semibold">
+            Esta deuda se marcará como "cancelada" y dejará de sumarse en los totales financieros de tu panel.
+          </span>
+        </p>
+        <div className="flex justify-end gap-3 pt-6 border-t border-linen/50">
+          <Button
+            type="button"
+            onClick={() => setCancelingDeuda(null)}
+            variant="secondary"
+          >
+            Cerrar
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirmCancel}
+            variant="danger"
+          >
+            Sí, Cancelar Deuda
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {/* History Payments Modal */}
-      {viewingHistoryDeuda && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button
-              onClick={() => {
-                setViewingHistoryDeuda(null);
-                setHistoryPayments([]);
-              }}
-              type="button"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg select-none"
-            >
-              ✕
-            </button>
-            
-            <h3 className="text-lg font-bold text-brand-gray-dark mb-1">
-              Historial de Pagos
-            </h3>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Cliente: <strong className="text-brand-gray-dark">{viewingHistoryDeuda.cliente_nombre}</strong><br />
-              Deuda: <strong className="text-brand-gray-dark">{viewingHistoryDeuda.descripcion}</strong> (Total: ${viewingHistoryDeuda.monto_total.toLocaleString()})
-            </p>
+      <Modal
+        isOpen={!!viewingHistoryDeuda}
+        onClose={() => {
+          setViewingHistoryDeuda(null);
+          setHistoryPayments([]);
+        }}
+        title="Historial de Abonos"
+      >
+        <p className="text-sm text-slate-500 mb-6 leading-relaxed bg-linen-light p-4 rounded-2xl border border-linen">
+          Cliente: <strong className="text-brand-gray-dark">{viewingHistoryDeuda?.cliente_nombre}</strong><br />
+          Deuda: <strong className="text-brand-gray-dark">{viewingHistoryDeuda?.descripcion}</strong> (Total: ${viewingHistoryDeuda?.monto_total.toLocaleString()})
+        </p>
 
-            {loadingHistory ? (
-              <div className="flex justify-center p-8">
-                <div className="w-6 h-6 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : historyPayments.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-400 italic">
-                No hay abonos activos registrados para esta deuda.
-              </div>
-            ) : (
-              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                {historyPayments.map((pago) => (
-                  <div key={pago.id} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                    <div>
-                      <div className="text-xs text-slate-400 font-mono">
-                        {new Date(pago.fecha_pago || pago.created_at).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </div>
-                      <div className="text-[11px] font-semibold text-slate-600 mt-0.5">
-                        Método: {pago.metodo_pago}
-                      </div>
-                      {pago.observaciones && (
-                        <div className="text-[10px] text-slate-400 italic mt-0.5 max-w-[220px] truncate" title={pago.observaciones}>
-                          Obs: {pago.observaciones}
-                        </div>
-                      )}
-                    </div>
-                    <div className="font-mono text-sm font-bold text-emerald-600">
-                      +${pago.monto_abonado.toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="flex justify-end pt-4 mt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewingHistoryDeuda(null);
-                  setHistoryPayments([]);
-                }}
-                className="btn-secondary"
-              >
-                Cerrar
-              </button>
-            </div>
+        {loadingHistory ? (
+          <LoadingState message="Cargando abonos registrados..." />
+        ) : historyPayments.length === 0 ? (
+          <div className="py-12 text-center text-base text-slate-400 italic">
+            No hay abonos activos registrados para esta deuda.
           </div>
+        ) : (
+          <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
+            {historyPayments.map((pago) => (
+              <div key={pago.id} className="flex justify-between items-center p-4 bg-white border border-linen rounded-2xl shadow-sm">
+                <div>
+                  <div className="text-xs text-slate-400 font-mono">
+                    {new Date(pago.fecha_pago || pago.created_at).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </div>
+                  <div className="text-sm font-semibold text-slate-700 mt-1">
+                    Método: <span className="capitalize">{pago.metodo_pago}</span>
+                  </div>
+                  {pago.observaciones && (
+                    <div className="text-xs text-slate-400 italic mt-1 max-w-[220px] truncate" title={pago.observaciones}>
+                      Obs: {pago.observaciones}
+                    </div>
+                  )}
+                </div>
+                <div className="font-mono text-base font-bold text-moss-dark">
+                  +${pago.monto_abonado.toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="flex justify-end pt-6 mt-6 border-t border-linen/50">
+          <Button
+            type="button"
+            onClick={() => {
+              setViewingHistoryDeuda(null);
+              setHistoryPayments([]);
+            }}
+            variant="secondary"
+          >
+            Cerrar
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {/* Change Status Modal */}
-      {updatingEstadoDeuda && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button
-              onClick={() => {
-                setUpdatingEstadoDeuda(null);
-                setStatusError(null);
-              }}
-              type="button"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg select-none"
-            >
-              ✕
-            </button>
+      <Modal
+        isOpen={!!updatingEstadoDeuda}
+        onClose={() => {
+          setUpdatingEstadoDeuda(null);
+          setStatusError(null);
+        }}
+        title="Estado Administrativo"
+      >
+        <p className="text-sm text-slate-500 mb-6 leading-relaxed bg-linen-light p-4 rounded-2xl border border-linen">
+          Cliente: <strong className="text-brand-gray-dark">{updatingEstadoDeuda?.cliente_nombre}</strong><br />
+          Deuda: <strong className="text-brand-gray-dark">{updatingEstadoDeuda?.descripcion}</strong>
+        </p>
 
-            <h3 className="text-lg font-bold text-brand-gray-dark mb-1">
-              Cambiar Estado Administrativo
-            </h3>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Cliente: <strong className="text-brand-gray-dark">{updatingEstadoDeuda.cliente_nombre}</strong><br />
-              Deuda: <strong className="text-brand-gray-dark">{updatingEstadoDeuda.descripcion}</strong>
-            </p>
-
-            {/* General Debt details (current state, pending balance, total amount) */}
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-4 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Estado actual:</span>
-                <span className={`font-bold uppercase ${
-                  getDebtStatus(updatingEstadoDeuda) === 'activa' ? 'text-blue-600' :
-                  getDebtStatus(updatingEstadoDeuda) === 'pagada' ? 'text-emerald-600' :
-                  getDebtStatus(updatingEstadoDeuda) === 'vencida' ? 'text-rose-600' : 'text-slate-500'
-                }`}>
-                  {getDebtStatus(updatingEstadoDeuda)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Saldo pendiente:</span>
-                <span className="font-mono font-bold text-brand-blue">
-                  ${updatingEstadoDeuda.saldo_pendiente.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Monto total:</span>
-                <span className="font-mono font-semibold">
-                  ${updatingEstadoDeuda.monto_total.toLocaleString()}
-                </span>
-              </div>
+        {updatingEstadoDeuda && (
+          <div className="bg-white border border-linen rounded-2xl p-4 mb-6 space-y-2 text-sm shadow-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-semibold">Estado actual:</span>
+              <span className="font-bold uppercase text-moss-dark">
+                {getDebtStatus(updatingEstadoDeuda)}
+              </span>
             </div>
-
-            {statusError && (
-              <div className="mb-4 p-3 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium animate-shake">
-                ⚠️ {statusError}
-              </div>
-            )}
-
-            {/* Actions list based on state */}
-            <div className="space-y-2.5 pt-2">
-              {/* If active / vencida */}
-              {(getDebtStatus(updatingEstadoDeuda) === 'activa' || getDebtStatus(updatingEstadoDeuda) === 'vencida') && (
-                <>
-                  <button
-                    onClick={() => handleTransitionEstado('pagada')}
-                    className="w-full btn-success text-xs py-2.5 font-bold rounded-lg shadow-sm"
-                  >
-                    ✅ Marcar como Pagada
-                  </button>
-                  <button
-                    onClick={() => handleTransitionEstado('cancelada')}
-                    className="w-full btn-danger text-xs py-2.5 bg-rose-600 hover:bg-rose-700 text-brand-white font-bold rounded-lg shadow-sm"
-                  >
-                    🚫 Cancelar Deuda
-                  </button>
-                </>
-              )}
-
-              {/* If pagada */}
-              {getDebtStatus(updatingEstadoDeuda) === 'pagada' && (
-                <>
-                  <button
-                    onClick={() => handleTransitionEstado('activa')}
-                    className="w-full btn-primary text-xs py-2.5 font-bold rounded-lg shadow-sm"
-                  >
-                    ⚡ Reactivar Deuda
-                  </button>
-                  <button
-                    onClick={() => handleTransitionEstado('cancelada')}
-                    className="w-full btn-danger text-xs py-2.5 bg-rose-600 hover:bg-rose-700 text-brand-white font-bold rounded-lg shadow-sm"
-                  >
-                    🚫 Cancelar Deuda
-                  </button>
-                </>
-              )}
-
-              {/* If cancelada */}
-              {getDebtStatus(updatingEstadoDeuda) === 'cancelada' && (
-                <button
-                  onClick={() => handleTransitionEstado('activa')}
-                  className="w-full btn-primary text-xs py-2.5 font-bold rounded-lg shadow-sm"
-                >
-                  ⚡ Reactivar Deuda
-                </button>
-              )}
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-semibold">Saldo pendiente:</span>
+              <span className="font-mono font-bold text-moss-dark">
+                ${updatingEstadoDeuda.saldo_pendiente.toLocaleString()}
+              </span>
             </div>
-
-            <div className="flex justify-end pt-4 mt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setUpdatingEstadoDeuda(null);
-                  setStatusError(null);
-                }}
-                className="btn-secondary text-xs"
-              >
-                Cerrar
-              </button>
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-semibold">Monto total:</span>
+              <span className="font-mono font-semibold text-slate-600">
+                ${updatingEstadoDeuda.monto_total.toLocaleString()}
+              </span>
             </div>
           </div>
+        )}
+
+        {statusError && (
+          <div className="mb-6">
+            <Alert type="error" onClose={() => setStatusError(null)}>
+              {statusError}
+            </Alert>
+          </div>
+        )}
+
+        {updatingEstadoDeuda && (
+          <div className="space-y-3 pt-2">
+            {(getDebtStatus(updatingEstadoDeuda) === 'activa' || getDebtStatus(updatingEstadoDeuda) === 'vencida') && (
+              <>
+                <Button
+                  onClick={() => handleTransitionEstado('pagada')}
+                  variant="success"
+                  className="w-full"
+                >
+                  Marcar como Pagada
+                </Button>
+                <Button
+                  onClick={() => handleTransitionEstado('cancelada')}
+                  variant="danger"
+                  className="w-full"
+                >
+                  Cancelar Deuda
+                </Button>
+              </>
+            )}
+
+            {getDebtStatus(updatingEstadoDeuda) === 'pagada' && (
+              <>
+                <Button
+                  onClick={() => handleTransitionEstado('activa')}
+                  variant="primary"
+                  className="w-full"
+                >
+                  Reactivar Deuda
+                </Button>
+                <Button
+                  onClick={() => handleTransitionEstado('cancelada')}
+                  variant="danger"
+                  className="w-full"
+                >
+                  Cancelar Deuda
+                </Button>
+              </>
+            )}
+
+            {getDebtStatus(updatingEstadoDeuda) === 'cancelada' && (
+              <Button
+                onClick={() => handleTransitionEstado('activa')}
+                variant="primary"
+                className="w-full"
+              >
+                Reactivar Deuda
+              </Button>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end pt-6 mt-6 border-t border-linen/50">
+          <Button
+            type="button"
+            onClick={() => {
+              setUpdatingEstadoDeuda(null);
+              setStatusError(null);
+            }}
+            variant="secondary"
+          >
+            Cerrar
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

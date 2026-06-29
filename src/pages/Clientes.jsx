@@ -8,6 +8,16 @@ import {
 } from '../services/clientesService';
 import { useCategorias } from '../contexts/CategoriasContext';
 import ClienteForm from '../components/ui/ClienteForm';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Badge from '../components/ui/Badge';
+import Alert from '../components/ui/Alert';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingState from '../components/ui/LoadingState';
+import Modal from '../components/ui/Modal';
+import { Search, Plus, Edit2, Trash2, Users } from 'lucide-react';
 
 /**
  * Clientes Page
@@ -101,7 +111,7 @@ function Clientes() {
       setEditingCliente(null);
     } catch (err) {
       console.error('Error saving client:', err);
-      throw err; // propagates to let the form modal display the error locally
+      throw err;
     }
   };
 
@@ -141,7 +151,6 @@ function Clientes() {
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
                           cliente.telefono.includes(searchQuery);
     
-    // Category ID is a UUID string, match directly without Number() conversion
     const matchesCategory = selectedCategory === '' || 
                             cliente.categoria_id === selectedCategory;
 
@@ -149,92 +158,96 @@ function Clientes() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 fade-in-up">
       {/* Alert Banners */}
       {alert && (
-        <div className={`p-4 rounded-xl border-l-4 font-medium text-sm animate-fade-in ${
-          alert.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-600 text-emerald-800' 
-            : 'bg-rose-50 border-rose-600 text-rose-800'
-        }`}>
-          {alert.type === 'success' ? '✅' : '⚠️'} {alert.message}
-        </div>
+        <Alert type={alert.type} onClose={() => setAlert(null)}>
+          {alert.message}
+        </Alert>
       )}
 
       {/* Top Filter and Actions Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-brand-white border border-slate-200 p-5 rounded-2xl shadow-premium">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 bg-white border border-linen p-6 rounded-3xl shadow-soft">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-3xl">
           {/* Search box */}
-          <div className="relative flex-1">
-            <input
+          <div className="flex-1">
+            <Input
+              id="search"
+              label="Buscar Cliente"
               type="text"
-              placeholder="Buscar cliente por nombre o teléfono..."
+              placeholder="Buscar por nombre o teléfono..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-4 pr-10"
             />
           </div>
           
           {/* Category Dropdown */}
-          <div className="w-full sm:w-60">
-            <select
+          <div className="w-full sm:w-64">
+            <Select
+              id="category"
+              label="Filtrar por Grupo"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Todos los grupos</option>
               {categorias.map(cat => (
                 <option key={cat.id} value={cat.id}>
                   {cat.nombre}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 
         {/* Create action */}
-        <button
+        <Button
           onClick={() => {
             setEditingCliente(null);
             setShowFormModal(true);
           }}
-          className="btn-primary shrink-0 self-start md:self-auto"
+          variant="primary"
+          className="shrink-0 w-full lg:w-auto"
         >
-          ➕ Nuevo Cliente
-        </button>
+          <Plus className="w-5 h-5" />
+          <span>Nuevo Cliente</span>
+        </Button>
       </div>
 
       {/* Main List Workspace */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px]">
-          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-slate-500 text-sm mt-4 font-semibold">Cargando clientes de Supabase...</span>
-        </div>
+        <Card className="flex flex-col items-center justify-center min-h-[300px]">
+          <LoadingState message="Cargando clientes..." />
+        </Card>
       ) : filteredClientes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px] text-center">
-          <div className="text-slate-300 text-5xl mb-4 select-none">👥</div>
-          <h4 className="font-bold text-lg text-brand-gray-dark">No se encontraron clientes</h4>
-          <p className="text-sm text-slate-400 mt-1 max-w-sm">
-            {clientes.length === 0 
-              ? 'Comienza a agregar clientes a tu cartera de cobro presionando "+ Nuevo Cliente".' 
-              : 'Intenta ajustar tus criterios de búsqueda o cambia la categoría filtrada.'}
-          </p>
-        </div>
+        <EmptyState
+          title="No se encontraron clientes"
+          description={
+            clientes.length === 0 
+              ? 'Comienza a agregar clientes a tu cartera de cobro presionando el botón "Nuevo Cliente".' 
+              : 'Intenta ajustar tus criterios de búsqueda o cambia la categoría filtrada.'
+          }
+          icon={<Users className="w-8 h-8 text-moss" />}
+          actionText={clientes.length === 0 ? "Nuevo Cliente" : null}
+          onAction={clientes.length === 0 ? () => {
+            setEditingCliente(null);
+            setShowFormModal(true);
+          } : null}
+        />
       ) : (
-        <div className="overflow-hidden border border-slate-200 rounded-2xl bg-brand-white shadow-premium">
+        <Card className="p-0 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
+            <table className="min-w-full">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>Teléfono</th>
-                  <th>Categoría</th>
-                  <th className="text-center">Deudas</th>
-                  <th>Estado</th>
-                  <th className="text-right">Acciones</th>
+                  <th className="px-6 py-4">Nombre</th>
+                  <th className="px-6 py-4">Apellido</th>
+                  <th className="px-6 py-4">Teléfono</th>
+                  <th className="px-6 py-4">Grupo</th>
+                  <th className="px-6 py-4">Estado</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {filteredClientes.map((cliente) => {
                   const catInfo = getClienteCategoriaInfo(cliente.categoria_id);
                   const badgeStyle = catInfo?.color
@@ -252,55 +265,50 @@ function Clientes() {
                       };
 
                   return (
-                    <tr key={cliente.id}>
-                      <td className="font-semibold text-brand-gray-dark">
+                    <tr key={cliente.id} className="hover:bg-linen-light/30 transition-colors">
+                      <td className="px-6 py-5 font-semibold text-brand-gray-dark text-base">
                         {cliente.nombre}
                       </td>
-                      <td>
+                      <td className="px-6 py-5 text-base text-slate-700">
                         {cliente.apellido || <span className="text-slate-300">-</span>}
                       </td>
-                      <td className="font-mono text-xs">
+                      <td className="px-6 py-5 font-mono text-sm text-slate-600">
                         {cliente.telefono}
                       </td>
-                      <td>
+                      <td className="px-6 py-5">
                         {cliente.categoria_id && catInfo ? (
                           <span 
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border"
                             style={badgeStyle}
                           >
                             {catInfo.nombre}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs font-medium">
-                            Sin categoría
+                          <span className="text-slate-400 text-sm font-medium">
+                            Sin grupo
                           </span>
                         )}
                       </td>
-                      <td className="text-center font-mono text-slate-400 text-xs">
-                        -
+                      <td className="px-6 py-5">
+                        <Badge variant={cliente.estado_cliente === 'activo' ? 'success' : 'info'}>
+                          {cliente.estado_cliente === 'activo' ? 'Activo' : 'Inactivo'}
+                        </Badge>
                       </td>
-                      <td>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
-                          cliente.estado_cliente === 'activo'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}>
-                          {cliente.estado_cliente}
-                        </span>
-                      </td>
-                      <td className="text-right whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-5 text-right whitespace-nowrap">
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEditClick(cliente)}
-                            className="px-2.5 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue/5 rounded transition-all"
+                            className="p-2.5 text-moss-dark hover:bg-moss/10 rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-moss/20"
+                            title="Editar"
                           >
-                            Editar
+                            <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(cliente)}
-                            className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded transition-all"
+                            className="p-2.5 text-rose-dark hover:bg-rose-light rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-rose/30"
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -310,7 +318,7 @@ function Clientes() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Add/Edit Modal Form */}
@@ -326,38 +334,35 @@ function Clientes() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      {deletingCliente && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-brand-gray-dark mb-2">
-              Confirmar Eliminación
-            </h3>
-            <p className="text-sm text-slate-500 mb-6">
-              ¿Estás seguro de que deseas eliminar permanentemente al cliente{' '}
-              <strong className="text-brand-gray-dark">
-                {deletingCliente.nombre} {deletingCliente.apellido || ''}
-              </strong>
-              ? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setDeletingCliente(null)}
-                className="btn-secondary"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="btn-danger"
-              >
-                Sí, Eliminar
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={!!deletingCliente}
+        onClose={() => setDeletingCliente(null)}
+        title="Confirmar Eliminación"
+      >
+        <p className="text-base text-slate-500 mb-6">
+          ¿Estás seguro de que deseas eliminar permanentemente al cliente{' '}
+          <strong className="text-brand-gray-dark">
+            {deletingCliente?.nombre} {deletingCliente?.apellido || ''}
+          </strong>
+          ? Esta acción no se puede deshacer.
+        </p>
+        <div className="flex justify-end gap-3 pt-4 border-t border-linen/50">
+          <Button
+            type="button"
+            onClick={() => setDeletingCliente(null)}
+            variant="secondary"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirmDelete}
+            variant="danger"
+          >
+            Sí, Eliminar
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

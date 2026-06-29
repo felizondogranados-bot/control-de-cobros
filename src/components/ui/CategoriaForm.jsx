@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Input from './Input';
+import Select from './Select';
+import Button from './Button';
+import Alert from './Alert';
+import Modal from './Modal';
 
 /**
  * CategoriaForm Component
@@ -9,14 +14,14 @@ import React, { useState, useEffect } from 'react';
  * - Exposes a state dropdown (activa/inactiva).
  */
 const CURATED_COLORS = [
-  { name: 'Azul', value: '#3b82f6', bgClass: 'bg-[#3b82f6]' },
-  { name: 'Esmeralda', value: '#10b981', bgClass: 'bg-[#10b981]' },
-  { name: 'Violeta', value: '#8b5cf6', bgClass: 'bg-[#8b5cf6]' },
-  { name: 'Ámbar', value: '#f59e0b', bgClass: 'bg-[#f59e0b]' },
-  { name: 'Rosa', value: '#f43f5e', bgClass: 'bg-[#f43f5e]' },
-  { name: 'Índigo', value: '#6366f1', bgClass: 'bg-[#6366f1]' },
-  { name: 'Turquesa', value: '#14b8a6', bgClass: 'bg-[#14b8a6]' },
-  { name: 'Gris Azulado', value: '#64748b', bgClass: 'bg-[#64748b]' },
+  { name: 'Moss Green', value: '#929433', bgClass: 'bg-[#929433]' },
+  { name: 'Matcha', value: '#D7D799', bgClass: 'bg-[#D7D799]' },
+  { name: 'Tea Rose', value: '#EBB4B2', bgClass: 'bg-[#EBB4B2]' },
+  { name: 'Azul Suave', value: '#A8C3E5', bgClass: 'bg-[#A8C3E5]' },
+  { name: 'Terracota', value: '#D87A68', bgClass: 'bg-[#D87A68]' },
+  { name: 'Menta', value: '#A5D6A7', bgClass: 'bg-[#A5D6A7]' },
+  { name: 'Lila', value: '#CE93D8', bgClass: 'bg-[#CE93D8]' },
+  { name: 'Gris Cálido', value: '#BCAAA4', bgClass: 'bg-[#BCAAA4]' },
 ];
 
 function CategoriaForm({ initialData, onSubmit, onClose }) {
@@ -40,7 +45,7 @@ function CategoriaForm({ initialData, onSubmit, onClose }) {
 
     const cleanNombre = nombre.trim();
     if (!cleanNombre) {
-      setError('El nombre de la categoría es obligatorio.');
+      setError('El nombre del grupo es obligatorio.');
       return;
     }
 
@@ -53,161 +58,145 @@ function CategoriaForm({ initialData, onSubmit, onClose }) {
       });
       onClose();
     } catch (err) {
-      setError(err.message || 'Error al guardar la categoría.');
+      setError(err.message || 'Error al guardar el grupo.');
     } finally {
       setLoading(false);
     }
   };
 
+  const footerContent = (
+    <div className="flex justify-end gap-3">
+      <Button
+        type="button"
+        onClick={onClose}
+        disabled={loading}
+        variant="secondary"
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="categoria-form"
+        disabled={loading}
+        variant="primary"
+      >
+        {loading ? 'Guardando...' : 'Guardar Grupo'}
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          type="button"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg select-none"
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={initialData ? 'Editar Grupo' : 'Nuevo Grupo'}
+      loading={loading}
+      footer={footerContent}
+    >
+      {error && (
+        <div className="mb-6">
+          <Alert type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </div>
+      )}
+
+      <form id="categoria-form" onSubmit={handleSubmit} className="space-y-5 pb-2">
+        {/* Nombre Input */}
+        <Input
+          id="nombre"
+          label="Nombre del Grupo"
+          type="text"
+          required
+          autoFocus
+          placeholder="Ej: Particular, Cliente VIP, Empresa..."
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
           disabled={loading}
+        />
+
+        {/* Estado Selector */}
+        <Select
+          id="estado"
+          label="Estado del Grupo"
+          value={estado}
+          onChange={(e) => setEstado(e.target.value)}
+          disabled={loading}
+          helperText="Los grupos inactivos no aparecerán al registrar nuevos clientes."
         >
-          ✕
-        </button>
+          <option value="activa">Activo</option>
+          <option value="inactiva">Inactivo</option>
+        </Select>
 
-        <h3 className="text-xl font-bold text-brand-gray-dark mb-4">
-          {initialData ? 'Editar Categoría' : 'Nueva Categoría'}
-        </h3>
-
-        {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Nombre Input */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Nombre de la Categoría *
-            </label>
-            <input
-              type="text"
-              required
-              autoFocus
-              placeholder="Ej: Particular, Cliente VIP, Empresa..."
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              disabled={loading}
-              className="w-full"
-            />
-          </div>
-
-          {/* Estado Selector */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Estado
-            </label>
-            <select
-              value={estado}
-              onChange={(e) => setEstado(e.target.value)}
-              disabled={loading}
-              className="w-full"
-            >
-              <option value="activa">Activa</option>
-              <option value="inactiva">Inactiva</option>
-            </select>
-            <p className="text-[10px] text-slate-400 mt-1">
-              Las categorías inactivas no aparecerán al registrar nuevos clientes, pero se mantendrán para los existentes.
-            </p>
-          </div>
-
-          {/* Color Palette Selector */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Color Visual (Opcional)
-            </label>
-            
-            {/* Color Grid */}
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5 mb-3">
-              {/* Default/None color option */}
-              <button
-                type="button"
-                onClick={() => setColor('')}
-                disabled={loading}
-                className={`h-8 rounded-lg border flex items-center justify-center text-xs font-bold transition-all ${
-                  color === ''
-                    ? 'border-brand-blue ring-2 ring-brand-blue/20 bg-slate-50 font-black'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-400'
-                }`}
-                title="Sin color personalizado"
-              >
-                🚫
-              </button>
-              
-              {CURATED_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setColor(c.value)}
-                  disabled={loading}
-                  className={`h-8 rounded-lg transition-all relative flex items-center justify-center ${c.bgClass} ${
-                    color === c.value
-                      ? 'ring-4 ring-offset-2 ring-brand-blue scale-105'
-                      : 'hover:opacity-90 active:scale-95'
-                  }`}
-                  title={c.name}
-                >
-                  {color === c.value && (
-                    <span className="text-white text-xs shadow-sm">✓</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Hex Custom Input */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Código de color HEX (Ej: #ffaa00)"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  disabled={loading}
-                  className="font-mono text-xs pl-8 uppercase"
-                  maxLength={7}
-                />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
-                  #
-                </span>
-              </div>
-              <input
-                type="color"
-                value={color && color.startsWith('#') && color.length === 7 ? color : '#3b82f6'}
-                onChange={(e) => setColor(e.target.value)}
-                disabled={loading}
-                className="w-9 h-9 p-0 border border-slate-200 rounded-lg cursor-pointer shrink-0 overflow-hidden"
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        {/* Color Palette Selector */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-slate-600 tracking-wide">
+            Color Identificador (Opcional)
+          </label>
+          
+          {/* Color Grid */}
+          <div className="grid grid-cols-4 sm:grid-cols-9 gap-2.5 mb-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => setColor('')}
               disabled={loading}
-              className="btn-secondary"
+              className={`h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all cursor-pointer ${
+                color === ''
+                  ? 'border-moss ring-2 ring-moss/20 bg-linen-light'
+                  : 'border-linen-dark hover:bg-linen-light text-slate-400'
+              }`}
+              title="Sin color personalizado"
             >
-              Cancelar
+              🚫
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
-            >
-              {loading ? 'Guardando...' : 'Guardar Categoría'}
-            </button>
+            
+            {CURATED_COLORS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setColor(c.value)}
+                disabled={loading}
+                className={`h-9 rounded-xl transition-all relative flex items-center justify-center cursor-pointer ${c.bgClass} ${
+                  color === c.value
+                    ? 'ring-4 ring-offset-2 ring-moss scale-105'
+                    : 'hover:opacity-90 active:scale-95'
+                }`}
+                title={c.name}
+              >
+                {color === c.value && (
+                  <span className="text-white text-xs shadow-sm">✓</span>
+                )}
+              </button>
+            ))}
           </div>
-        </form>
-      </div>
-    </div>
+
+          {/* Hex Custom Input */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Código de color HEX (Ej: #ffaa00)"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm font-mono uppercase pl-8"
+                maxLength={7}
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono text-slate-400">
+                #
+              </span>
+            </div>
+            <input
+              type="color"
+              value={color && color.startsWith('#') && color.length === 7 ? color : '#929433'}
+              onChange={(e) => setColor(e.target.value)}
+              disabled={loading}
+              className="w-10 h-10 p-0 border border-linen-dark rounded-xl cursor-pointer shrink-0 overflow-hidden"
+            />
+          </div>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

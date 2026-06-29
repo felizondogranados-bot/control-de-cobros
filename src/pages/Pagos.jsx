@@ -7,6 +7,16 @@ import {
 } from '../services/pagosService';
 import { getDeudas } from '../services/deudasService';
 import PagoForm from '../components/ui/PagoForm';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Badge from '../components/ui/Badge';
+import Alert from '../components/ui/Alert';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingState from '../components/ui/LoadingState';
+import Modal from '../components/ui/Modal';
+import { Search, Plus, Trash2, CreditCard } from 'lucide-react';
 
 /**
  * Pagos Page
@@ -73,7 +83,6 @@ function Pagos() {
     try {
       const newPago = await createPago(formData, user.id);
       
-      // Refresh list to pull computed client names, debt descriptions and updated status values
       const refreshedPagos = await getPagos(user.id);
       setPagos(refreshedPagos);
 
@@ -84,7 +93,7 @@ function Pagos() {
       triggerAlert('success', `Abono por $${formData.monto_abonado.toLocaleString()} registrado con éxito.`);
     } catch (err) {
       console.error('Error creating payment:', err);
-      throw err; // propagates to let the form modal display the error locally
+      throw err;
     }
   };
 
@@ -94,7 +103,6 @@ function Pagos() {
     try {
       await deletePago(deletingPago.id, deletingPago.deuda_id, user.id);
       
-      // Refresh both lists to update balance calculations
       const refreshedPagos = await getPagos(user.id);
       setPagos(refreshedPagos);
 
@@ -119,7 +127,6 @@ function Pagos() {
 
     const matchesMethod = selectedMethod === '' || pago.metodo_pago === selectedMethod;
 
-    // Filter status tabs
     const matchesStatus = 
       (selectedStatusTab === 'activos' && pago.estado === 'activo') ||
       (selectedStatusTab === 'anulados' && pago.estado === 'anulado');
@@ -128,23 +135,19 @@ function Pagos() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 fade-in-up">
       {/* Alert Banner */}
       {alert && (
-        <div className={`p-4 rounded-xl border-l-4 font-medium text-sm animate-fade-in ${
-          alert.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-600 text-emerald-800' 
-            : 'bg-rose-50 border-rose-600 text-rose-800'
-        }`}>
-          {alert.type === 'success' ? '✅' : '⚠️'} {alert.message}
-        </div>
+        <Alert type={alert.type} onClose={() => setAlert(null)}>
+          {alert.message}
+        </Alert>
       )}
 
       {/* Filter and Action Header */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-brand-white border border-slate-200 p-5 rounded-2xl shadow-premium">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 bg-white border border-linen p-6 rounded-3xl shadow-soft">
         
         {/* Status Tab buttons */}
-        <div className="flex bg-slate-100 p-1 rounded-xl shrink-0 self-start">
+        <div className="flex bg-linen-light p-1 rounded-2xl shrink-0 self-start border border-linen/50">
           {[
             { id: 'activos', label: 'Abonos Activos' },
             { id: 'anulados', label: 'Anulados / Errores' }
@@ -152,9 +155,9 @@ function Pagos() {
             <button
               key={tab.id}
               onClick={() => setSelectedStatusTab(tab.id)}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${
                 selectedStatusTab === tab.id
-                  ? 'bg-brand-white text-brand-gray-dark shadow-sm'
+                  ? 'bg-white text-moss-dark shadow-sm'
                   : 'text-slate-500 hover:text-brand-gray-dark'
               }`}
             >
@@ -163,19 +166,21 @@ function Pagos() {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl w-full">
-          {/* Search bar */}
-          <input
+        <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-xl w-full">
+          <Input
+            id="search"
+            label="Buscar por Cliente o Deuda"
             type="text"
-            placeholder="Buscar por cliente o deuda..."
+            placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
           />
 
           {/* Payment Method filter */}
-          <div className="w-full sm:w-48">
-            <select
+          <div className="w-full sm:w-56">
+            <Select
+              id="method"
+              label="Método de Pago"
               value={selectedMethod}
               onChange={(e) => setSelectedMethod(e.target.value)}
             >
@@ -185,68 +190,71 @@ function Pagos() {
               <option value="Transferencia">Transferencia</option>
               <option value="Tarjeta">Tarjeta</option>
               <option value="Otro">Otro</option>
-            </select>
+            </Select>
           </div>
         </div>
 
         {/* Create action */}
-        <button
+        <Button
           onClick={() => setShowFormModal(true)}
-          className="btn-primary shrink-0 self-start xl:self-auto"
+          variant="primary"
+          className="shrink-0 w-full xl:w-auto"
         >
-          💰 Registrar Pago
-        </button>
+          <Plus className="w-5 h-5" />
+          <span>Registrar Pago</span>
+        </Button>
       </div>
 
       {/* Main List Workspace */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px]">
-          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-slate-500 text-sm mt-4 font-semibold">Cargando abonos de Supabase...</span>
-        </div>
+        <Card className="flex flex-col items-center justify-center min-h-[300px]">
+          <LoadingState message="Cargando pagos..." />
+        </Card>
       ) : filteredPagos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-brand-white border border-slate-200 rounded-2xl shadow-premium min-h-[300px] text-center">
-          <div className="text-slate-300 text-5xl mb-4 select-none">💳</div>
-          <h4 className="font-bold text-lg text-brand-gray-dark">No se encontraron abonos</h4>
-          <p className="text-sm text-slate-400 mt-1 max-w-sm">
-            {pagos.length === 0 
+        <EmptyState
+          title="No se encontraron abonos"
+          description={
+            pagos.length === 0 
               ? 'No hay registros de abonos guardados. Registra el primero presionando "Registrar Pago".' 
-              : 'Intenta ajustar tus criterios de búsqueda o filtros de método.'}
-          </p>
-        </div>
+              : 'Intenta ajustar tus criterios de búsqueda o filtros de método.'
+          }
+          icon={<CreditCard className="w-8 h-8 text-moss" />}
+          actionText={pagos.length === 0 ? "Registrar Pago" : null}
+          onAction={pagos.length === 0 ? () => setShowFormModal(true) : null}
+        />
       ) : (
-        <div className="overflow-hidden border border-slate-200 rounded-2xl bg-brand-white shadow-premium">
+        <Card className="p-0 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
+            <table className="min-w-full">
               <thead>
                 <tr>
-                  <th>Cliente</th>
-                  <th>Deuda Asociada</th>
-                  <th>Monto Abonado</th>
-                  <th>Fecha de Pago</th>
-                  <th>Método</th>
-                  <th>Observaciones</th>
-                  <th className="text-right">Acciones</th>
+                  <th className="px-6 py-4">Cliente</th>
+                  <th className="px-6 py-4">Deuda Asociada</th>
+                  <th className="px-6 py-4">Monto Abonado</th>
+                  <th className="px-6 py-4">Fecha de Pago</th>
+                  <th className="px-6 py-4">Método</th>
+                  <th className="px-6 py-4">Observaciones</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {filteredPagos.map((pago) => (
-                  <tr key={pago.id}>
-                    <td className="font-semibold text-brand-gray-dark">
+                  <tr key={pago.id} className="hover:bg-linen-light/30 transition-colors">
+                    <td className="px-6 py-5 font-semibold text-brand-gray-dark text-base">
                       {pago.cliente_nombre}
                     </td>
-                    <td>
+                    <td className="px-6 py-5 text-base">
                       <div>
-                        <div className="text-brand-gray-dark font-medium">{pago.deuda_descripcion}</div>
-                        <div className="text-xs text-slate-400 font-mono mt-0.5">
+                        <div className="text-brand-gray-dark font-semibold">{pago.deuda_descripcion}</div>
+                        <div className="text-sm text-slate-400 font-mono mt-0.5">
                           Total deuda: ${pago.deuda_monto_total.toLocaleString()}
                         </div>
                       </div>
                     </td>
-                    <td className="font-mono text-sm font-bold text-emerald-600">
+                    <td className="px-6 py-5 font-mono text-base font-bold text-moss-dark">
                       +${pago.monto_abonado.toLocaleString()}
                     </td>
-                    <td className="font-mono text-xs font-semibold text-slate-600">
+                    <td className="px-6 py-5 font-mono text-sm text-slate-600 font-semibold">
                       {new Date(pago.fecha_pago || pago.created_at).toLocaleDateString('es-CR', { 
                         day: '2-digit', 
                         month: '2-digit', 
@@ -255,26 +263,27 @@ function Pagos() {
                         minute: '2-digit'
                       })}
                     </td>
-                    <td>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200">
+                    <td className="px-6 py-5">
+                      <Badge variant="info">
                         {pago.metodo_pago}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="text-xs max-w-xs truncate" title={pago.observaciones}>
+                    <td className="px-6 py-5 text-sm text-slate-600 max-w-xs truncate" title={pago.observaciones}>
                       {pago.observaciones || <span className="text-slate-300">-</span>}
                     </td>
-                    <td className="text-right whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-5 text-right whitespace-nowrap">
                       {pago.estado === 'activo' ? (
                         <button
                           onClick={() => setDeletingPago(pago)}
-                          className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded transition-all"
+                          className="p-2 text-rose-dark hover:bg-rose-light rounded-xl transition-all cursor-pointer min-w-[38px] min-h-[38px] inline-flex items-center justify-center border border-transparent hover:border-rose/30"
+                          title="Anular pago"
                         >
-                          Eliminar
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       ) : (
-                        <span className="text-slate-400 text-xs font-medium italic select-none">
+                        <Badge variant="danger">
                           Anulado
-                        </span>
+                        </Badge>
                       )}
                     </td>
                   </tr>
@@ -282,7 +291,7 @@ function Pagos() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Add Modal */}
@@ -295,39 +304,36 @@ function Pagos() {
       )}
 
       {/* Logical Cancel Confirmation */}
-      {deletingPago && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-brand-gray-dark mb-2">
-              Anular Abono
-            </h3>
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-              ¿Estás seguro de que deseas anular el abono por <strong className="text-brand-gray-dark">${deletingPago.monto_abonado.toLocaleString()}</strong> de{' '}
-              <strong className="text-brand-gray-dark">{deletingPago.cliente_nombre}</strong>?
-              <br /><br />
-              <span className="text-xs text-rose-600 block font-medium bg-rose-50 border border-rose-100 rounded-lg p-3">
-                ⚠️ <strong>Importante:</strong> Esta acción es una baja lógica. El abono se marcará como "anulado" y el saldo pendiente de la deuda se incrementará automáticamente.
-              </span>
-            </p>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setDeletingPago(null)}
-                className="btn-secondary"
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCancel}
-                className="btn-danger"
-              >
-                Sí, Anular Abono
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={!!deletingPago}
+        onClose={() => setDeletingPago(null)}
+        title="Anular Abono"
+      >
+        <p className="text-base text-slate-500 mb-6 leading-relaxed">
+          ¿Estás seguro de que deseas anular el abono por <strong className="text-brand-gray-dark">${deletingPago?.monto_abonado.toLocaleString()}</strong> de{' '}
+          <strong className="text-brand-gray-dark">{deletingPago?.cliente_nombre}</strong>?
+          <br /><br />
+          <span className="text-sm text-rose-dark block font-semibold bg-rose-light border border-rose/30 rounded-2xl p-4">
+            ⚠️ Importante: El abono se marcará como "anulado" y el saldo pendiente de la deuda se incrementará automáticamente.
+          </span>
+        </p>
+        <div className="flex justify-end gap-3 pt-6 border-t border-linen/50">
+          <Button
+            type="button"
+            onClick={() => setDeletingPago(null)}
+            variant="secondary"
+          >
+            Cerrar
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirmCancel}
+            variant="danger"
+          >
+            Sí, Anular Abono
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

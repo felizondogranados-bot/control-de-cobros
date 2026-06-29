@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Input from './Input';
+import Select from './Select';
+import Button from './Button';
+import Alert from './Alert';
+import Modal from './Modal';
 
 /**
  * DeudaForm Component
@@ -20,7 +25,6 @@ function DeudaForm({ initialData, clientes, onSubmit, onClose }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Semanal days options
   const diasSemana = [
     'Lunes',
     'Martes',
@@ -79,10 +83,6 @@ function DeudaForm({ initialData, clientes, onSubmit, onClose }) {
     e.preventDefault();
     setError(null);
 
-    // Logs for debugging
-    console.log('Cliente seleccionado:', formData.cliente_id);
-    console.log('Datos deuda:', formData);
-
     // Validation
     if (!formData.cliente_id) {
       setError('Debes seleccionar un cliente.');
@@ -90,7 +90,7 @@ function DeudaForm({ initialData, clientes, onSubmit, onClose }) {
     }
 
     if (!formData.descripcion.trim()) {
-      setError('La descripción de la deuda es obligatoria.');
+      setError('La descripción de la deudor es obligatoria.');
       return;
     }
 
@@ -113,7 +113,7 @@ function DeudaForm({ initialData, clientes, onSubmit, onClose }) {
     setLoading(true);
     try {
       await onSubmit({
-        cliente_id: formData.cliente_id, // Passed as raw value (e.g. UUID string)
+        cliente_id: formData.cliente_id,
         descripcion: formData.descripcion.trim(),
         monto_total: numericMonto,
         frecuencia: formData.frecuencia,
@@ -127,221 +127,196 @@ function DeudaForm({ initialData, clientes, onSubmit, onClose }) {
     }
   };
 
-  // Render conditional inputs for Día de Cobro
-  const renderDiaCobroInput = () => {
-    if (formData.frecuencia === 'semanal') {
-      return (
-        <select
-          value={formData.dia_cobro}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              dia_cobro: e.target.value,
-            })
-          }
-          disabled={loading}
-        >
-          {diasSemana.map(d => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-      );
-    }
-
-    if (formData.frecuencia === 'quincenal') {
-      return (
-        <input
-          type="text"
-          value="15 y 30 de cada mes"
-          disabled
-          className="bg-slate-100 cursor-not-allowed font-medium text-slate-500"
-        />
-      );
-    }
-
-    if (formData.frecuencia === 'mensual') {
-      return (
-        <select
-          value={formData.dia_cobro}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              dia_cobro: e.target.value,
-            })
-          }
-          disabled={loading}
-        >
-          {Array.from({ length: 31 }, (_, i) => String(i + 1)).map(num => (
-            <option key={num} value={num}>Día {num}</option>
-          ))}
-        </select>
-      );
-    }
-
-    return null;
-  };
-
-  // Check if we are in Edit Mode to place visual indicators for future locked fields
   const isEditMode = !!initialData;
 
+  const footerContent = (
+    <div className="flex justify-end gap-3">
+      <Button
+        type="button"
+        onClick={onClose}
+        disabled={loading}
+        variant="secondary"
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="deuda-form"
+        disabled={loading}
+        variant="primary"
+      >
+        {loading ? 'Guardando...' : 'Guardar Deuda'}
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          type="button"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg select-none"
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={isEditMode ? 'Editar Deuda' : 'Registrar Nueva Deuda'}
+      loading={loading}
+      footer={footerContent}
+    >
+      {error && (
+        <div className="mb-6">
+          <Alert type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </div>
+      )}
+
+      <form id="deuda-form" onSubmit={handleSubmit} className="space-y-5 pb-2">
+        {/* Cliente Selection */}
+        <Select
+          id="cliente"
+          label={isEditMode ? "Cliente" : "Selecciona el Cliente"}
+          required
+          value={formData.cliente_id}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              cliente_id: e.target.value,
+            })
+          }
           disabled={loading}
+          helperText={isEditMode ? "Fijo si existen abonos registrados" : ""}
         >
-          ✕
-        </button>
+          <option value="">Selecciona un cliente...</option>
+          {clientes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nombre} {c.apellido || ''}
+            </option>
+          ))}
+        </Select>
 
-        <h3 className="text-xl font-bold text-brand-gray-dark mb-4">
-          {isEditMode ? 'Editar Deuda' : 'Registrar Nueva Deuda'}
-        </h3>
+        {/* Descripción */}
+        <Input
+          id="descripcion"
+          label="Detalle o Descripción"
+          type="text"
+          required
+          placeholder="Ej: Cobro de mercadería de Shein"
+          value={formData.descripcion}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              descripcion: e.target.value,
+            })
+          }
+          disabled={loading}
+        />
 
-        {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium">
-            ⚠️ {error}
-          </div>
-        )}
+        {/* Monto Total */}
+        <Input
+          id="monto"
+          label="Monto Total a Cobrar"
+          type="number"
+          required
+          step="0.01"
+          placeholder="0.00"
+          value={formData.monto_total}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              monto_total: e.target.value,
+            })
+          }
+          disabled={loading}
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Cliente Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Cliente * {isEditMode && <span className="text-[10px] text-amber-600 normal-case">(No modificable con pagos registrados)</span>}
+        {/* Frecuencia and Día de Cobro Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Select
+            id="frecuencia"
+            label="Frecuencia"
+            required
+            value={formData.frecuencia}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                frecuencia: e.target.value,
+              })
+            }
+            disabled={loading}
+          >
+            <option value="semanal">Semanal</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="mensual">Mensual</option>
+          </Select>
+          
+          <div className="flex flex-col gap-2 w-full">
+            <label className="block text-sm font-semibold text-slate-600 tracking-wide">
+              Día de Cobro <span className="text-rose-dark">*</span>
             </label>
-            <select
-              required
-              value={formData.cliente_id}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  cliente_id: e.target.value,
-                })
-              }
-              disabled={loading}
-            >
-              <option value="">Selecciona un cliente...</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre} {c.apellido || ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Descripción */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Descripción *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Ej: Cobro de mercadería de Shein"
-              value={formData.descripcion}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  descripcion: e.target.value,
-                })
-              }
-              disabled={loading}
-            />
-          </div>
-
-          {/* Monto Total */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Monto Total *
-            </label>
-            <input
-              type="number"
-              required
-              step="0.01"
-              placeholder="0.00"
-              value={formData.monto_total}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  monto_total: e.target.value,
-                })
-              }
-              disabled={loading}
-            />
-          </div>
-
-          {/* Frecuencia and Día de Cobro Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                Frecuencia * {isEditMode && <span className="text-[10px] text-amber-600 normal-case">(Fijo en pagos)</span>}
-              </label>
+            {formData.frecuencia === 'semanal' && (
               <select
-                value={formData.frecuencia}
+                value={formData.dia_cobro}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    frecuencia: e.target.value,
+                    dia_cobro: e.target.value,
                   })
                 }
                 disabled={loading}
+                className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm appearance-none pr-10 cursor-pointer"
               >
-                <option value="semanal">Semanal</option>
-                <option value="quincenal">Quincenal</option>
-                <option value="mensual">Mensual</option>
+                {diasSemana.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
               </select>
-            </div>
-            
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                Día de Cobro *
-              </label>
-              {renderDiaCobroInput()}
-            </div>
-          </div>
+            )}
 
-          {/* Observaciones */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Observaciones
-            </label>
-            <textarea
-              placeholder="Detalles adicionales, número de cuotas, aclaraciones..."
-              value={formData.observaciones}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  observaciones: e.target.value,
-                })
-              }
-              disabled={loading}
-              className="w-full px-4 py-2.5 bg-brand-white border border-slate-200 rounded-lg text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all duration-200 text-sm shadow-sm h-20 resize-none"
-            />
-          </div>
+            {formData.frecuencia === 'quincenal' && (
+              <input
+                type="text"
+                value="15 y 30 de cada mes"
+                disabled
+                className="w-full px-4 py-3 bg-linen-light border border-linen-dark rounded-xl text-base text-slate-500 cursor-not-allowed font-medium shadow-sm"
+              />
+            )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="btn-secondary"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
-            >
-              {loading ? 'Guardando...' : 'Guardar Deuda'}
-            </button>
+            {formData.frecuencia === 'mensual' && (
+              <select
+                value={formData.dia_cobro}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    dia_cobro: e.target.value,
+                  })
+                }
+                disabled={loading}
+                className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm appearance-none pr-10 cursor-pointer"
+              >
+                {Array.from({ length: 31 }, (_, i) => String(i + 1)).map(num => (
+                  <option key={num} value={num}>Día {num}</option>
+                ))}
+              </select>
+            )}
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        {/* Observaciones */}
+        <div className="flex flex-col gap-2 w-full">
+          <label htmlFor="observaciones" className="block text-sm font-semibold text-slate-600 tracking-wide">
+            Observaciones (Opcional)
+          </label>
+          <textarea
+            id="observaciones"
+            placeholder="Detalles adicionales, notas sobre el cobro..."
+            value={formData.observaciones}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                observaciones: e.target.value,
+              })
+            }
+            disabled={loading}
+            className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm h-24 resize-none"
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
 

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+import Alert from '../components/ui/Alert';
+import Card from '../components/ui/Card';
 
 /**
  * Register Page
@@ -52,83 +56,88 @@ function Register() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <div className="w-full max-w-md bg-brand-white border border-slate-200 rounded-2xl p-8 shadow-premium">
-        <h2 className="text-2xl font-bold text-brand-gray-dark text-center mb-6">
-          Crear una Cuenta
-        </h2>
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8">
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-moss flex items-center justify-center text-white font-bold text-2xl shadow-md mb-3 select-none">
+            $
+          </div>
+          <h2 className="text-3xl font-title font-bold text-brand-gray-dark text-center">
+            Crear una cuenta
+          </h2>
+          <p className="text-slate-500 text-base mt-1 text-center">
+            Únete para administrar tus cobros con tranquilidad
+          </p>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium">
-            ⚠️ {error}
+          <div className="mb-6">
+            <Alert type="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-4 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-700 text-xs rounded-r-lg font-medium">
-            ✅ ¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.
+          <div className="mb-6">
+            <Alert type="success" onClose={() => setSuccess(false)}>
+              ¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.
+            </Alert>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              required
-              placeholder="correo@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input
+            id="email"
+            label="Correo Electrónico"
+            type="email"
+            required
+            placeholder="correo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Contraseña (mínimo 6 caracteres)
-            </label>
-            <input
-              type="password"
-              required
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+          <Input
+            id="password"
+            label="Contraseña"
+            type="password"
+            required
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting}
+            helperText="Debe tener al menos 6 caracteres"
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Confirmar Contraseña
-            </label>
-            <input
-              type="password"
-              required
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+          <Input
+            id="confirmPassword"
+            label="Confirmar Contraseña"
+            type="password"
+            required
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={submitting}
+          />
 
-          <button
+          <Button
             type="submit"
             disabled={submitting}
-            className="w-full btn-primary mt-2"
+            variant="primary"
+            className="w-full mt-2"
           >
             {submitting ? 'Creando cuenta...' : 'Registrarse'}
-          </button>
+          </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-500">
+        <div className="mt-8 text-center text-base text-slate-500 border-t border-linen/50 pt-6">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-brand-blue hover:underline font-semibold">
+          <Link to="/login" className="text-moss-dark hover:underline font-bold">
             Inicia sesión
           </Link>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

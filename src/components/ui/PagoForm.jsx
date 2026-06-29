@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import Input from './Input';
+import Select from './Select';
+import Button from './Button';
+import Alert from './Alert';
+import Modal from './Modal';
 
 /**
  * PagoForm Component
@@ -51,9 +56,6 @@ function PagoForm({ deudas, onSubmit, onClose }) {
       observaciones: formData.observaciones.trim()
     };
 
-    console.log('Deuda seleccionada:', formData.deuda_id);
-    console.log('Payload pago:', payload);
-
     setLoading(true);
     try {
       await onSubmit(payload);
@@ -64,141 +66,114 @@ function PagoForm({ deudas, onSubmit, onClose }) {
     }
   };
 
+  const footerContent = (
+    <div className="flex justify-end gap-3">
+      <Button
+        type="button"
+        onClick={onClose}
+        disabled={loading}
+        variant="secondary"
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="pago-form"
+        disabled={loading || !formData.deuda_id}
+        variant="primary"
+      >
+        {loading ? 'Guardando...' : 'Registrar Pago'}
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-brand-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          type="button"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg select-none"
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Registrar Abono / Pago"
+      loading={loading}
+      footer={footerContent}
+    >
+      {error && (
+        <div className="mb-6">
+          <Alert type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </div>
+      )}
+
+      <form id="pago-form" onSubmit={handleSubmit} className="space-y-5 pb-2">
+        {/* Deuda Selection */}
+        <Select
+          id="deuda"
+          label="Deuda Activa"
+          required
+          value={formData.deuda_id}
+          onChange={(e) => {
+            setFormData({
+              ...formData,
+              deuda_id: e.target.value
+            });
+            setError(null);
+          }}
+          disabled={loading}
+          helperText={deudasActivas.length === 0 ? "No hay deudas activas registradas en el sistema para realizar abonos." : ""}
+        >
+          <option value="">Selecciona la deuda del cliente...</option>
+          {deudasActivas.map((deuda) => (
+            <option key={deuda.id} value={deuda.id}>
+              {deuda.cliente_nombre} - {deuda.descripcion} (Saldo: ${deuda.saldo_pendiente.toLocaleString()})
+            </option>
+          ))}
+        </Select>
+
+        {/* Monto Abonado */}
+        <Input
+          id="monto"
+          label="Monto Abonado"
+          type="number"
+          required
+          step="0.01"
+          placeholder="0.00"
+          value={formData.monto_abonado}
+          onChange={(e) => setFormData({ ...formData, monto_abonado: e.target.value })}
+          disabled={loading || !formData.deuda_id}
+          helperText={selectedDebt ? `Saldo máximo permitido: $${selectedDebt.saldo_pendiente.toLocaleString()}` : ""}
+        />
+
+        {/* Método de Pago */}
+        <Select
+          id="metodo"
+          label="Método de Pago"
+          required
+          value={formData.metodo_pago}
+          onChange={(e) => setFormData({ ...formData, metodo_pago: e.target.value })}
           disabled={loading}
         >
-          ✕
-        </button>
+          <option value="Efectivo">Efectivo</option>
+          <option value="SINPE">SINPE</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Tarjeta">Tarjeta</option>
+          <option value="Otro">Otro</option>
+        </Select>
 
-        <h3 className="text-xl font-bold text-brand-gray-dark mb-4">
-          Registrar Abono / Pago
-        </h3>
-
-        {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border-l-4 border-rose-600 text-rose-700 text-xs rounded-r-lg font-medium animate-shake">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Deuda Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Deuda Activa *
-            </label>
-            <select
-              required
-              value={formData.deuda_id}
-              onChange={(e) => {
-                setFormData({
-                  ...formData,
-                  deuda_id: e.target.value
-                });
-                setError(null);
-              }}
-              disabled={loading}
-            >
-              <option value="">Selecciona la deuda del cliente...</option>
-              {deudasActivas.map((deuda) => (
-                <option key={deuda.id} value={deuda.id}>
-                  {deuda.cliente_nombre} - {deuda.descripcion} (Saldo: ${deuda.saldo_pendiente.toLocaleString()})
-                </option>
-              ))}
-            </select>
-            {deudasActivas.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">
-                ⚠️ No hay deudas activas registradas en el sistema para realizar abonos.
-              </p>
-            )}
-          </div>
-
-          {/* Monto Abonado */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Monto Abonado *
-              </label>
-              {selectedDebt && (
-                <span className="text-[11px] font-semibold text-brand-blue">
-                  Saldo pendiente máximo: ${selectedDebt.saldo_pendiente.toLocaleString()}
-                </span>
-              )}
-            </div>
-            <input
-              type="number"
-              required
-              step="0.01"
-              placeholder="0.00"
-              value={formData.monto_abonado}
-              onChange={(e) => setFormData({ ...formData, monto_abonado: e.target.value })}
-              disabled={loading || !formData.deuda_id}
-            />
-          </div>
-
-          {/* Método de Pago */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Método de Pago *
-            </label>
-            <select
-              value={formData.metodo_pago}
-              onChange={(e) => setFormData({ ...formData, metodo_pago: e.target.value })}
-              disabled={loading}
-            >
-              <option value="Efectivo">Efectivo</option>
-              <option value="SINPE">SINPE</option>
-              <option value="Transferencia">Transferencia</option>
-              <option value="Tarjeta">Tarjeta</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-
-          {/* Observaciones */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Observaciones (Opcional)
-            </label>
-            <textarea
-              placeholder="Ej: Comprobante número 48293, abono quincena..."
-              value={formData.observaciones}
-              onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
-              disabled={loading}
-              className="w-full px-4 py-2.5 bg-brand-white border border-slate-200 rounded-lg text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all duration-200 text-sm shadow-sm h-20 resize-none"
-            />
-          </div>
-
-          {/* Comprobante and audit logs structure layout notes (preparación de arquitectura) */}
-          <div className="hidden">
-            {/* Future placeholders for receipt file uploads */}
-            <input type="file" disabled />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="btn-secondary"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !formData.deuda_id}
-              className="btn-primary"
-            >
-              {loading ? 'Guardando...' : 'Registrar Pago'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Observaciones */}
+        <div className="flex flex-col gap-2 w-full">
+          <label htmlFor="observaciones" className="block text-sm font-semibold text-slate-600 tracking-wide">
+            Observaciones (Opcional)
+          </label>
+          <textarea
+            id="observaciones"
+            placeholder="Ej: Comprobante número 48293, abono quincena..."
+            value={formData.observaciones}
+            onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+            disabled={loading}
+            className="w-full px-4 py-3 bg-white border border-linen-dark rounded-xl text-base text-brand-gray-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-moss/20 focus:border-moss transition-all duration-200 shadow-sm h-24 resize-none"
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
 

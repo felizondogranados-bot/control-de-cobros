@@ -28,34 +28,34 @@ function Layout() {
 
   const getTitle = () => {
     switch (pathname) {
-      case '/': return 'Dashboard';
-      case '/categorias': return 'Gestión de Categorías';
-      case '/clientes': return 'Gestión de Clientes';
-      case '/deudas': return 'Control de Deudas';
-      case '/pagos': return 'Historial de Pagos';
-      case '/movimientos': return 'Auditoría de Movimientos';
-      case '/login': return 'Ingreso al Sistema';
-      case '/register': return 'Crear Cuenta';
-      case '/forgot-password': return 'Recuperar Clave';
+      case '/': return 'Inicio';
+      case '/categorias': return 'Grupos';
+      case '/clientes': return 'Clientes';
+      case '/deudas': return 'Deudas';
+      case '/pagos': return 'Pagos';
+      case '/movimientos': return 'Historial';
+      case '/login': return 'Ingreso';
+      case '/register': return 'Registro';
+      case '/forgot-password': return 'Recuperar';
       default: return 'Control de Cobros';
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-brand-gray-light font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen bg-linen-light font-sans text-brand-gray-dark selection:bg-moss/20 selection:text-moss-dark">
       <Sidebar 
         isAuthenticated={isAuthenticated}
         onLogout={logout}
       />
       <div className="flex-1 flex flex-col min-w-0">
         {offline && (
-          <div className="bg-rose-600 text-white text-center py-2.5 px-4 text-xs font-extrabold w-full z-50 flex items-center justify-center gap-2 shadow-md animate-pulse">
-            <span>⚠️ Sin conexión a internet. Algunas funciones pueden no estar disponibles.</span>
+          <div className="bg-rose-light text-rose-dark border-b border-rose/30 text-center py-3 px-4 text-sm font-bold w-full z-50 flex items-center justify-center gap-2 shadow-sm animate-pulse">
+            <span>⚠️ Sin conexión a internet. Algunas funciones pueden estar limitadas.</span>
           </div>
         )}
         <Header title={getTitle()} user={user} />
-        <main className="p-6 md:p-8 flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto w-full">
+        <main className="p-6 md:p-10 flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto w-full fade-in-up">
             <Outlet />
           </div>
         </main>
@@ -65,4 +65,3 @@ function Layout() {
 }
 
 export default Layout;
-
